@@ -340,6 +340,10 @@ class SuccessResponseView(PaymentDetailsView):
         elif len(parts) > 1:
             first_name = parts[0]
             last_name = " ".join(parts[1:])
+        if self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE') == 'c2':
+            country_code = 'CN'
+        else:
+            country_code = self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE')
         return ShippingAddress(
             first_name=first_name,
             last_name=last_name,
@@ -348,7 +352,7 @@ class SuccessResponseView(PaymentDetailsView):
             line4=self.txn.value('PAYMENTREQUEST_0_SHIPTOCITY', default=""),
             state=self.txn.value('PAYMENTREQUEST_0_SHIPTOSTATE', default=""),
             postcode=self.txn.value('PAYMENTREQUEST_0_SHIPTOZIP', default=""),
-            country=Country.objects.get(iso_3166_1_a2=self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'))
+            country=Country.objects.get(iso_3166_1_a2=country_code)
         )
 
     def _get_shipping_method_by_name(self, name, basket, shipping_address=None):
