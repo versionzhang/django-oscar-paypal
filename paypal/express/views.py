@@ -340,7 +340,7 @@ class SuccessResponseView(PaymentDetailsView):
         elif len(parts) > 1:
             first_name = parts[0]
             last_name = " ".join(parts[1:])
-        if self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE') == 'c2':
+        if self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE') == 'C2':
             country_code = 'CN'
         else:
             country_code = self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE')
