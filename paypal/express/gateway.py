@@ -310,12 +310,7 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     for index, method in enumerate(shipping_methods):
         is_default = index == 0
         params['L_SHIPPINGOPTIONISDEFAULT%d' % index] = 'true' if is_default else 'false'
-        if hasattr(method, 'charge_incl_tax'):
-            # Oscar < 0.8
-            charge = method.charge_incl_tax
-        else:
-            cost = method.calculate(basket)
-            charge = cost.incl_tax
+        charge = method.calculate(basket).incl_tax
 
         if charge > max_charge:
             max_charge = charge
