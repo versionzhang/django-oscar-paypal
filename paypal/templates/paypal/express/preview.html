@@ -46,6 +46,7 @@
         <input type="hidden" name="payer_id" value="{{ payer_id }}" />
         <input type="hidden" name="token" value="{{ token }}" />
         <button type="submit" id='place-order' class="btn b2 btn-default pull-right" data-loading-text="{% trans 'Submitting...' %}">
+            {% trans "Place order" %}
         </button>
     </form>
 {% endblock place_order %}
