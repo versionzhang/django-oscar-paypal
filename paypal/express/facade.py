@@ -43,7 +43,7 @@ def get_paypal_url(basket, shipping_methods, user=None, shipping_address=None,
         use_https = getattr(settings, 'PAYPAL_CALLBACK_HTTPS', True)
         scheme = 'https' if use_https else 'http'
     return_url = '%s://%s%s' % (
-        scheme, host, reverse('paypal-success-response', kwargs={
+        scheme, host, reverse('paypal-success-response-custom', kwargs={
             'basket_id': basket.id}))
     cancel_url = '%s://%s%s' % (
         scheme, host, reverse('paypal-cancel-response', kwargs={
