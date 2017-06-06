@@ -46,7 +46,7 @@ def get_paypal_url(basket, shipping_methods, user=None, shipping_address=None,
         scheme, host, reverse('paypal-success-response-custom', kwargs={
             'basket_id': basket.id}))
     cancel_url = '%s://%s%s' % (
-        scheme, host, reverse('paypal-cancel-response', kwargs={
+        scheme, host, reverse('paypal-cancel-response-custom', kwargs={
             'basket_id': basket.id}))
 
     # URL for updating shipping methods - we only use this if we have a set of
