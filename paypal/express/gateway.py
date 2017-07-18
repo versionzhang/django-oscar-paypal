@@ -270,8 +270,9 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     #
     # Hence, if tax is to be shown then it has to be aggregated up to the order
     # level.
-    params['PAYMENTREQUEST_0_ITEMAMT'] = _format_currency(
-        basket.total_incl_tax)
+    # params['PAYMENTREQUEST_0_ITEMAMT'] = _format_currency(
+    #    basket.total_incl_tax)
+    params['PAYMENTREQUEST_0_ITEMAMT'] = _format_currency(amount)
     params['PAYMENTREQUEST_0_TAXAMT'] = _format_currency(D('0.00'))
 
     # Instant update callback information
