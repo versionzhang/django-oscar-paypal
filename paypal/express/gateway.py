@@ -170,7 +170,11 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # PayPal have an upper limit on transactions.  It's in dollars which is a
     # fiddly to work with.  Lazy solution - only check when dollars are used as
     # the PayPal currency.
-    amount = basket.total_incl_tax
+
+    # date: 2017.07.18, modify discounts.
+    order = basket.order_set.all()[0]
+    # amount = basket.total_incl_tax
+    amount = order.total_incl_tax
     if currency == 'USD' and amount > 10000:
         msg = 'PayPal can only be used for orders up to 10000 USD'
         logger.error(msg)
@@ -216,30 +220,40 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_ECCustomizing
 
     # Iterate over the 3 types of discount that can occur
-    for discount in basket.offer_discounts:
+    # for discount in basket.offer_discounts:
+    #     index += 1
+    #     name = _("Special Offer: %s") % discount['name']
+    #     params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
+    #     params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
+    #     params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
+    #         -discount['discount'])
+    #     params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
+    # for discount in basket.voucher_discounts:
+    #     index += 1
+    #     name = "%s (%s)" % (discount['voucher'].name,
+    #                         discount['voucher'].code)
+    #     params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
+    #     params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
+    #     params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
+    #         -discount['discount'])
+    #     params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
+    # for discount in basket.shipping_discounts:
+    #     index += 1
+    #     name = _("Shipping Offer: %s") % discount['name']
+    #     params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
+    #     params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
+    #     params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
+    #         -discount['discount'])
+    #     params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
+
+    # date: 2017.7.19 update use order for discounts.
+    for discount in order.basket_discounts.all():
         index += 1
-        name = _("Special Offer: %s") % discount['name']
+        name = _("Special Offer: %s") % discount['offer_name']
         params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
         params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
         params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
-            -discount['discount'])
-        params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
-    for discount in basket.voucher_discounts:
-        index += 1
-        name = "%s (%s)" % (discount['voucher'].name,
-                            discount['voucher'].code)
-        params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
-        params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
-        params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
-            -discount['discount'])
-        params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
-    for discount in basket.shipping_discounts:
-        index += 1
-        name = _("Shipping Offer: %s") % discount['name']
-        params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
-        params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
-        params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
-            -discount['discount'])
+            -discount['amount'])
         params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
 
     # We include tax in the prices rather than separately as that's how it's
@@ -310,7 +324,9 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     for index, method in enumerate(shipping_methods):
         is_default = index == 0
         params['L_SHIPPINGOPTIONISDEFAULT%d' % index] = 'true' if is_default else 'false'
-        charge = method.calculate(basket).incl_tax
+        # use order for shipping charge
+        # charge = method.calculate(basket).incl_tax
+        charge = order.shipping_incl_tax
 
         if charge > max_charge:
             max_charge = charge
@@ -322,7 +338,9 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
 
     # Set shipping charge explicitly if it has been passed
     if shipping_method:
-        charge = shipping_method.calculate(basket).incl_tax
+        # use order for shipping charge
+        charge = order.shipping_incl_tax
+        # charge = shipping_method.calculate(basket).incl_tax
         params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
         params['PAYMENTREQUEST_0_AMT'] += charge
 
