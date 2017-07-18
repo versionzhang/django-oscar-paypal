@@ -358,8 +358,8 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # params['MAXAMT'] = _format_currency(amount + max_charge)
 
     # has include shipping fee.
-    params['PAYMENTREQUEST_0_MAXAMT'] = _format_currency(amount)
-    params['MAXAMT'] = _format_currency(amount)
+    params['PAYMENTREQUEST_0_MAXAMT'] = _format_currency(amount + charge)
+    params['MAXAMT'] = _format_currency(amount + charge)
 
     # Handling set to zero for now - I've never worked on a site that needed a
     # handling charge.
