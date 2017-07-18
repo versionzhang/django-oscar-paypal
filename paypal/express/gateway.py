@@ -330,19 +330,26 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
 
         if charge > max_charge:
             max_charge = charge
-        if is_default:
-            params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
-            params['PAYMENTREQUEST_0_AMT'] += charge
+        # if is_default:
+        #     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
+        #     params['PAYMENTREQUEST_0_AMT'] += charge
         params['L_SHIPPINGOPTIONNAME%d' % index] = six.text_type(method.name)
         params['L_SHIPPINGOPTIONAMOUNT%d' % index] = _format_currency(charge)
 
+    # use total shipping fee.
+    charge = order.shipping_incl_tax
+
+    params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
+    params['PAYMENTREQUEST_0_AMT'] += charge
+
     # Set shipping charge explicitly if it has been passed
-    if shipping_method:
-        # use order for shipping charge
-        charge = order.shipping_incl_tax
-        # charge = shipping_method.calculate(basket).incl_tax
-        params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
-        params['PAYMENTREQUEST_0_AMT'] += charge
+    # if shipping_method:
+    # use order for shipping charge
+    # charge = order.shipping_incl_tax
+    # charge = shipping_method.calculate(basket).incl_tax
+    # params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
+    # not add charge because
+    # params['PAYMENTREQUEST_0_AMT'] += charge
 
     # Both the old version (MAXAMT) and the new version (PAYMENT...) are needed
     # here - think it's a problem with the API.
