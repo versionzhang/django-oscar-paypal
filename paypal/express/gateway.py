@@ -249,7 +249,7 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # date: 2017.7.19 update use order for discounts.
     for discount in order.basket_discounts.all():
         index += 1
-        name = _("Special Offer: %s") % discount['offer_name']
+        name = _("Special Offer: %s") % discount.offer_name
         params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
         params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
         params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
