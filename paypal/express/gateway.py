@@ -341,7 +341,7 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     charge = order.shipping_incl_tax
 
     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
-    params['PAYMENTREQUEST_0_AMT'] += charge
+    # params['PAYMENTREQUEST_0_AMT'] += charge
 
     # Set shipping charge explicitly if it has been passed
     # if shipping_method:
@@ -356,7 +356,7 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # here - think it's a problem with the API.
     # params['PAYMENTREQUEST_0_MAXAMT'] = _format_currency(amount + max_charge)
     # params['MAXAMT'] = _format_currency(amount + max_charge)
-    
+
     # has include shipping fee.
     params['PAYMENTREQUEST_0_MAXAMT'] = _format_currency(amount)
     params['MAXAMT'] = _format_currency(amount)
