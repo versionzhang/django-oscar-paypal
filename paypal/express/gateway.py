@@ -174,7 +174,7 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # date: 2017.07.18, modify discounts.
     order = basket.order_set.all()[0]
     # amount = basket.total_incl_tax
-    amount = order.total_incl_tax
+    amount = order.total_incl_tax - order.shipping_incl_tax
     if currency == 'USD' and amount > 10000:
         msg = 'PayPal can only be used for orders up to 10000 USD'
         logger.error(msg)
@@ -341,7 +341,7 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     charge = order.shipping_incl_tax
 
     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
-    # params['PAYMENTREQUEST_0_AMT'] += charge
+    params['PAYMENTREQUEST_0_AMT'] += charge
 
     # Set shipping charge explicitly if it has been passed
     # if shipping_method:
