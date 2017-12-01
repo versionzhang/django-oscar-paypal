@@ -14,7 +14,6 @@ from . import models, exceptions as express_exceptions
 from paypal import gateway
 from paypal import exceptions
 
-
 # PayPal methods
 SET_EXPRESS_CHECKOUT = 'SetExpressCheckout'
 GET_EXPRESS_CHECKOUT = 'GetExpressCheckoutDetails'
@@ -30,6 +29,7 @@ SALE, AUTHORIZATION, ORDER = 'Sale', 'Authorization', 'Order'
 API_VERSION = getattr(settings, 'PAYPAL_API_VERSION', '119')
 
 logger = logging.getLogger('paypal.express')
+debug_logger = logging.getLogger("paypal")
 
 
 def _format_description(description):
@@ -63,15 +63,15 @@ def _fetch_response(method, extra_params):
 
     # Print easy-to-read version of params for debugging
     param_str = "\n".join(["%s: %s" % x for x in sorted(params.items())])
-    logger.debug("Making %s request to %s with params:\n%s", method, url,
-                 param_str)
+    debug_logger.info("Making %s request to %s with params:\n%s", method, url,
+                         param_str)
 
     # Make HTTP request
     pairs = gateway.post(url, params)
 
     pairs_str = "\n".join(["%s: %s" % x for x in sorted(pairs.items())
                            if not x[0].startswith('_')])
-    logger.debug("Response with params:\n%s", pairs_str)
+    debug_logger.info("Response with params:\n%s", pairs_str)
 
     # Record transaction data - we save this model whether the txn
     # was successful or not
@@ -432,6 +432,8 @@ def do_void(txn_id, note=None):
 
 FULL_REFUND = 'Full'
 PARTIAL_REFUND = 'Partial'
+
+
 def refund_txn(txn_id, is_partial=False, amount=None, currency=None):
     params = {
         'TRANSACTIONID': txn_id,
