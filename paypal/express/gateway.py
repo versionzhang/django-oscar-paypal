@@ -29,7 +29,7 @@ SALE, AUTHORIZATION, ORDER = 'Sale', 'Authorization', 'Order'
 API_VERSION = getattr(settings, 'PAYPAL_API_VERSION', '119')
 
 logger = logging.getLogger('paypal.express')
-debug_logger = logging.getLogger("paypal")
+debug_logger = logging.getLogger("paypal_record")
 
 
 def _format_description(description):
