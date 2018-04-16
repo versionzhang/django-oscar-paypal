@@ -67,10 +67,16 @@ def get_paypal_url(basket, shipping_methods, user=None, shipping_address=None,
     # pre-fill the registration form.
     address = None
     if user:
+        # modify. check shipping_address and user address. when summary method
         addresses = user.addresses.all().order_by('-is_default_for_billing')
         if len(addresses):
-            address = addresses[0]
-
+            for address_obj in addresses:
+                if shipping_address and getattr(shipping_address, 'summary', '') and \
+                        shipping_address.summary == address_obj.summary:
+                    address = address_obj
+                    break
+            else:
+                address = addresses[0]
     return set_txn(basket=basket,
                    shipping_methods=shipping_methods,
                    currency=currency,
