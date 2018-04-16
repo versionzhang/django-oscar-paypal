@@ -38,6 +38,8 @@ Repository = get_class('shipping.repository', 'Repository')
 Selector = get_class('partner.strategy', 'Selector')
 Source = get_model('payment', 'Source')
 SourceType = get_model('payment', 'SourceType')
+Order = get_model("order", "Order")
+
 try:
     Applicator = get_class('offer.applicator', 'Applicator')
 except ModuleNotFoundError:
@@ -108,7 +110,8 @@ class RedirectView(CheckoutSessionMixin, RedirectView):
         if self.as_payment_method:
             if basket.is_shipping_required():
                 # Only check for shipping details if required.
-                shipping_addr = self.get_shipping_address(basket)
+                # shipping_addr = self.get_shipping_address(basket)
+                shipping_addr = Order.objects.get(basket=basket).shipping_address
                 if not shipping_addr:
                     raise MissingShippingAddressException()
 
