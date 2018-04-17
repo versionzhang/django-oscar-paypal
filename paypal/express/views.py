@@ -107,30 +107,30 @@ class RedirectView(CheckoutSessionMixin, RedirectView):
         }                                   # to support no_shipping
 
         user = self.request.user
-        if self.as_payment_method:
-            if basket.is_shipping_required():
-                # Only check for shipping details if required.
-                # shipping_addr = self.get_shipping_address(basket)
-                shipping_addr = Order.objects.get(basket=basket).shipping_address
-                if not shipping_addr:
-                    raise MissingShippingAddressException()
+        # if self.as_payment_method:
+        if basket.is_shipping_required():
+            # Only check for shipping details if required.
+            # shipping_addr = self.get_shipping_address(basket)
+            order = Order.objects.get(basket=basket)
+            shipping_addr = order.shipping_address
+            if not shipping_addr:
+                raise MissingShippingAddressException()
 
-                shipping_method = self.get_shipping_method(
-                    basket, shipping_addr)
-                if not shipping_method:
-                    raise MissingShippingMethodException()
+            shipping_method = order.shipping_method
 
-                params['shipping_address'] = shipping_addr
-                params['shipping_method'] = shipping_method
-                params['shipping_methods'] = []
-
-        else:
-            # Maik doubts that this code ever worked. Assigning
-            # shipping method instances to Paypal params
-            # isn't going to work, is it?
+            params['shipping_address'] = shipping_addr
+            params['shipping_method'] = shipping_method
             shipping_methods = Repository().get_shipping_methods(
-                user=user, basket=basket, request=self.request)
+                    user=user, basket=basket, request=self.request)
             params['shipping_methods'] = shipping_methods
+
+        # else:
+        #     # Maik doubts that this code ever worked. Assigning
+        #     # shipping method instances to Paypal params
+        #     # isn't going to work, is it?
+        #     shipping_methods = Repository().get_shipping_methods(
+        #         user=user, basket=basket, request=self.request)
+        #     params['shipping_methods'] = shipping_methods
 
         if settings.DEBUG:
             # Determine the localserver's hostname to use when
