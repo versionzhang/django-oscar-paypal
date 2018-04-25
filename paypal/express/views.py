@@ -109,20 +109,23 @@ class RedirectView(CheckoutSessionMixin, RedirectView):
         user = self.request.user
         # if self.as_payment_method:
         if basket.is_shipping_required():
-            # Only check for shipping details if required.
-            # shipping_addr = self.get_shipping_address(basket)
-            order = Order.objects.get(basket=basket)
-            shipping_addr = order.shipping_address
-            if not shipping_addr:
-                raise MissingShippingAddressException()
+                # Only check for shipping details if required.
+                # shipping_addr = self.get_shipping_address(basket)
+                shipping_addr = Order.objects.get(basket=basket).shipping_address
+                if not shipping_addr:
+                    raise MissingShippingAddressException()
 
-            shipping_method = order.shipping_method
+                # shipping_method = self.get_shipping_method(
+                #     basket, shipping_addr)
+                # if not shipping_method:
+                #     raise MissingShippingMethodException()
 
-            params['shipping_address'] = shipping_addr
-            params['shipping_method'] = shipping_method
-            shipping_methods = Repository().get_shipping_methods(
+                params['shipping_address'] = shipping_addr
+                # params['shipping_method'] = shipping_method
+                # params['shipping_methods'] = []
+                shipping_methods = Repository().get_shipping_methods(
                     user=user, basket=basket, request=self.request)
-            params['shipping_methods'] = shipping_methods
+                params['shipping_methods'] = shipping_methods
 
         # else:
         #     # Maik doubts that this code ever worked. Assigning

@@ -52,11 +52,11 @@ def get_paypal_url(basket, shipping_methods, user=None, shipping_address=None,
     # URL for updating shipping methods - we only use this if we have a set of
     # shipping methods to choose between.
     update_url = None
-    if shipping_methods:
-        update_url = '%s://%s%s' % (
-            scheme, host,
-            reverse('paypal-shipping-options',
-                    kwargs={'basket_id': basket.id}))
+    # if shipping_methods:
+    #     update_url = '%s://%s%s' % (
+    #         scheme, host,
+    #         reverse('paypal-shipping-options',
+    #                 kwargs={'basket_id': basket.id}))
 
     # Determine whether a shipping address is required
     no_shipping = False

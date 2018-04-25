@@ -174,7 +174,8 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # date: 2017.07.18, modify discounts.
     order = basket.order_set.all()[0]
     # amount = basket.total_incl_tax
-    amount = order.total_incl_tax - order.shipping_incl_tax
+    amount = order.total_incl_tax
+    # - order.shipping_incl_tax
     if currency == 'USD' and amount > 10000:
         msg = 'PayPal can only be used for orders up to 10000 USD'
         logger.error(msg)
@@ -195,23 +196,23 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     })
 
     # Add item details
-    index = 0
-    for index, line in enumerate(basket.all_lines()):
-        product = line.product
-        params['L_PAYMENTREQUEST_0_NAME%d' % index] = product.get_title()
-        params['L_PAYMENTREQUEST_0_NUMBER%d' % index] = (product.upc if
-                                                         product.upc else '')
-        desc = ''
-        if product.description:
-            desc = _format_description(product.description)
-        params['L_PAYMENTREQUEST_0_DESC%d' % index] = desc
-        # Note, we don't include discounts here - they are handled as separate
-        # lines - see below
-        params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
-            line.unit_price_incl_tax)
-        params['L_PAYMENTREQUEST_0_QTY%d' % index] = line.quantity
-        params['L_PAYMENTREQUEST_0_ITEMCATEGORY%d' % index] = (
-            'Physical' if product.is_shipping_required else 'Digital')
+    # index = 0
+    # for index, line in enumerate(basket.all_lines()):
+    #     product = line.product
+    #     params['L_PAYMENTREQUEST_0_NAME%d' % index] = product.get_title()
+    #     params['L_PAYMENTREQUEST_0_NUMBER%d' % index] = (product.upc if
+    #                                                      product.upc else '')
+    #     desc = ''
+    #     if product.description:
+    #         desc = _format_description(product.description)
+    #     params['L_PAYMENTREQUEST_0_DESC%d' % index] = desc
+    #     # Note, we don't include discounts here - they are handled as separate
+    #     # lines - see below
+    #     params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
+    #         line.unit_price_incl_tax)
+    #     params['L_PAYMENTREQUEST_0_QTY%d' % index] = line.quantity
+    #     params['L_PAYMENTREQUEST_0_ITEMCATEGORY%d' % index] = (
+    #         'Physical' if product.is_shipping_required else 'Digital')
 
     # If the order has discounts associated with it, the way PayPal suggests
     # using the API is to add a separate item for the discount with the value
@@ -247,14 +248,14 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     #     params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
 
     # date: 2017.7.19 update use order for discounts.
-    for discount in order.basket_discounts.all():
-        index += 1
-        name = _("Special Offer: %s") % discount.offer_name
-        params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
-        params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
-        params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
-            -discount.amount)
-        params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
+    # for discount in order.basket_discounts.all():
+    #     index += 1
+    #     name = _("Special Offer: %s") % discount.offer_name
+    #     params['L_PAYMENTREQUEST_0_NAME%d' % index] = name
+    #     params['L_PAYMENTREQUEST_0_DESC%d' % index] = _format_description(name)
+    #     params['L_PAYMENTREQUEST_0_AMT%d' % index] = _format_currency(
+    #         -discount.amount)
+    #     params['L_PAYMENTREQUEST_0_QTY%d' % index] = 1
 
     # We include tax in the prices rather than separately as that's how it's
     # done on most British/Australian sites.  Will need to refactor in the
@@ -272,8 +273,8 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # level.
     # params['PAYMENTREQUEST_0_ITEMAMT'] = _format_currency(
     #    basket.total_incl_tax)
-    params['PAYMENTREQUEST_0_ITEMAMT'] = _format_currency(amount)
-    params['PAYMENTREQUEST_0_TAXAMT'] = _format_currency(D('0.00'))
+    # params['PAYMENTREQUEST_0_ITEMAMT'] = _format_currency(amount)
+    # params['PAYMENTREQUEST_0_TAXAMT'] = _format_currency(D('0.00'))
 
     # Instant update callback information
     if update_url:
@@ -284,64 +285,64 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # an account.
     if user:
         params['EMAIL'] = user.email
-    if user_address:
-        params['SHIPTONAME'] = user_address.name
-        params['SHIPTOSTREET'] = user_address.line1
-        params['SHIPTOSTREET2'] = user_address.line2
-        params['SHIPTOCITY'] = user_address.line4
-        params['SHIPTOSTATE'] = user_address.state
-        params['SHIPTOZIP'] = user_address.postcode
-        params['SHIPTOCOUNTRYCODE'] = user_address.country.iso_3166_1_a2
+    # if user_address:
+    #     params['SHIPTONAME'] = user_address.name
+    #     params['SHIPTOSTREET'] = user_address.line1
+    #     params['SHIPTOSTREET2'] = user_address.line2
+    #     params['SHIPTOCITY'] = user_address.line4
+    #     params['SHIPTOSTATE'] = user_address.state
+    #     params['SHIPTOZIP'] = user_address.postcode
+    #     params['SHIPTOCOUNTRYCODE'] = user_address.country.iso_3166_1_a2
 
     # Shipping details (if already set) - we override the SHIPTO* fields and
     # set a flag to indicate that these can't be altered on the PayPal side.
-    if shipping_method and shipping_address:
-        params['ADDROVERRIDE'] = 1
-        # It's recommend not to set 'confirmed shipping' if supplying the
-        # shipping address directly.
-        params['REQCONFIRMSHIPPING'] = 0
-        params['SHIPTONAME'] = shipping_address.name
-        params['SHIPTOSTREET'] = shipping_address.line1
-        params['SHIPTOSTREET2'] = shipping_address.line2
-        params['SHIPTOCITY'] = shipping_address.line4
-        params['SHIPTOSTATE'] = shipping_address.state
-        params['SHIPTOZIP'] = shipping_address.postcode
-        params['SHIPTOCOUNTRYCODE'] = shipping_address.country.iso_3166_1_a2
-
-        # For US addresses, we need to try and convert the state into 2 letter
-        # code - otherwise we can get a 10736 error as the shipping address and
-        # zipcode don't match the state. Very silly really.
-        if params['SHIPTOCOUNTRYCODE'] == 'US':
-            key = params['SHIPTOSTATE'].lower().strip()
-            if key in us_states.STATES_NORMALIZED:
-                params['SHIPTOSTATE'] = us_states.STATES_NORMALIZED[key]
-
-    elif no_shipping:
-        params['NOSHIPPING'] = 1
+    # if shipping_method and shipping_address:
+    #     params['ADDROVERRIDE'] = 1
+    #     # It's recommend not to set 'confirmed shipping' if supplying the
+    #     # shipping address directly.
+    #     params['REQCONFIRMSHIPPING'] = 0
+    #     params['SHIPTONAME'] = shipping_address.name
+    #     params['SHIPTOSTREET'] = shipping_address.line1
+    #     params['SHIPTOSTREET2'] = shipping_address.line2
+    #     params['SHIPTOCITY'] = shipping_address.line4
+    #     params['SHIPTOSTATE'] = shipping_address.state
+    #     params['SHIPTOZIP'] = shipping_address.postcode
+    #     params['SHIPTOCOUNTRYCODE'] = shipping_address.country.iso_3166_1_a2
+    #
+    #     # For US addresses, we need to try and convert the state into 2 letter
+    #     # code - otherwise we can get a 10736 error as the shipping address and
+    #     # zipcode don't match the state. Very silly really.
+    #     if params['SHIPTOCOUNTRYCODE'] == 'US':
+    #         key = params['SHIPTOSTATE'].lower().strip()
+    #         if key in us_states.STATES_NORMALIZED:
+    #             params['SHIPTOSTATE'] = us_states.STATES_NORMALIZED[key]
+    #
+    # elif no_shipping:
+    #     params['NOSHIPPING'] = 1
 
     # Shipping charges
-    params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(D('0.00'))
-    max_charge = D('0.00')
-    for index, method in enumerate(shipping_methods):
-        is_default = index == 0
-        params['L_SHIPPINGOPTIONISDEFAULT%d' % index] = 'true' if is_default else 'false'
-        # use order for shipping charge
-        # charge = method.calculate(basket).incl_tax
-        charge = order.shipping_incl_tax
-
-        if charge > max_charge:
-            max_charge = charge
-        # if is_default:
-        #     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
-        #     params['PAYMENTREQUEST_0_AMT'] += charge
-        params['L_SHIPPINGOPTIONNAME%d' % index] = six.text_type(method.name)
-        params['L_SHIPPINGOPTIONAMOUNT%d' % index] = _format_currency(charge)
-
-    # use total shipping fee.
-    charge = order.shipping_incl_tax
-
-    params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
-    params['PAYMENTREQUEST_0_AMT'] += charge
+    # params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(D('0.00'))
+    # max_charge = D('0.00')
+    # for index, method in enumerate(shipping_methods):
+    #     is_default = index == 0
+    #     params['L_SHIPPINGOPTIONISDEFAULT%d' % index] = 'true' if is_default else 'false'
+    #     # use order for shipping charge
+    #     # charge = method.calculate(basket).incl_tax
+    #     charge = order.shipping_incl_tax
+    #
+    #     if charge > max_charge:
+    #         max_charge = charge
+    #     # if is_default:
+    #     #     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
+    #     #     params['PAYMENTREQUEST_0_AMT'] += charge
+    #     params['L_SHIPPINGOPTIONNAME%d' % index] = six.text_type(method.name)
+    #     params['L_SHIPPINGOPTIONAMOUNT%d' % index] = _format_currency(charge)
+    #
+    # # use total shipping fee.
+    # charge = order.shipping_incl_tax
+    #
+    # params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(charge)
+    # params['PAYMENTREQUEST_0_AMT'] += charge
 
     # Set shipping charge explicitly if it has been passed
     # if shipping_method:
@@ -358,12 +359,12 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
     # params['MAXAMT'] = _format_currency(amount + max_charge)
 
     # has include shipping fee.
-    params['PAYMENTREQUEST_0_MAXAMT'] = _format_currency(amount + charge)
-    params['MAXAMT'] = _format_currency(amount + charge)
+    # params['PAYMENTREQUEST_0_MAXAMT'] = _format_currency(amount + charge)
+    # params['MAXAMT'] = _format_currency(amount + charge)
 
     # Handling set to zero for now - I've never worked on a site that needed a
     # handling charge.
-    params['PAYMENTREQUEST_0_HANDLINGAMT'] = _format_currency(D('0.00'))
+    # params['PAYMENTREQUEST_0_HANDLINGAMT'] = _format_currency(D('0.00'))
 
     # Ensure that the total is formatted correctly.
     params['PAYMENTREQUEST_0_AMT'] = _format_currency(
